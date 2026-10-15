@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Will you go to the gym with me?</title>
+<style>
+:root{--bg:#f4b4a7;--card:#fff5f1;--ink:#482f32;--accent:#d97772;--line:#e7aaa0;--muted:#815d5d}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:24px}.stage{width:min(760px,100%);min-height:520px;background:var(--card);border:1px solid rgba(72,47,50,.08);border-radius:28px;padding:clamp(24px,5vw,56px);box-shadow:0 18px 60px #8e514022;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.slide{width:100%;animation:appear .3s ease}.hidden{display:none!important}h1{font-size:clamp(2rem,6vw,3.5rem);line-height:1.08;letter-spacing:-.045em;margin:0 0 28px}p{font-size:1.1rem;line-height:1.5}.buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}.btn{border:0;border-radius:999px;min-height:48px;padding:13px 28px;font:inherit;font-weight:700;cursor:pointer;transition:transform .15s,opacity .15s}.btn:hover{transform:translateY(-2px)}.yes{background:var(--accent);color:white}.no{background:#f0d8d3;color:var(--ink)}#noMessage{font-size:1.3rem;font-weight:650;margin-top:24px;min-height:36px}.calendar-wrap{max-width:610px;margin:0 auto}.months{display:grid;grid-template-columns:1fr 1fr;gap:18px}.month h2{font-size:1.15rem;margin:0 0 12px}.week,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.week span{font-size:.72rem;font-weight:750;color:var(--muted);padding:5px 0}.day{aspect-ratio:1;border:1px solid transparent;background:transparent;border-radius:50%;font:inherit;font-size:.9rem;color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:0;position:relative}.day:not(:disabled):hover{background:#f5ded8}.day:disabled{cursor:default;opacity:.25}.day.selected{border:2px solid var(--accent);font-weight:800;background:#fffaf8}.day:disabled{opacity:.28;cursor:not-allowed}.day.selected:focus-visible{outline:2px solid var(--ink);outline-offset:2px}.hint{font-size:.9rem;color:var(--muted);margin:18px 0 0}.status{min-height:34px;font-weight:750;font-size:1.2rem;margin:12px 0 0}.selected-date{font-size:.95rem;color:var(--muted);margin-top:8px}.last h1{font-size:clamp(2rem,6vw,3.6rem)}.foot{font-size:.75rem;color:#9c7470;margin-top:28px}.result-tools{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}.secondary{background:#f0d8d3;color:var(--ink)}.delayed{visibility:hidden}.delayed.revealed{visibility:visible}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}@media(max-width:560px){body{padding:12px;min-height:100svh}.stage{width:100%;padding:28px 16px;min-height:calc(100svh - 24px);border-radius:22px}.months{grid-template-columns:1fr;gap:20px}.month{max-width:340px;width:100%;margin:auto}.day{font-size:.95rem}.calendar-wrap{width:100%}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body><main class="stage" aria-live="polite">
+<section class="slide" id="slide1"><h1>Will you go to the gym with me?</h1><div class="buttons"><button class="btn yes" id="yesBtn">yes</button><button class="btn no" id="noBtn">no</button></div><div id="noMessage" role="status"></div></section>
+<section class="slide hidden" id="slide2"><h1>When are you free?</h1><div class="calendar-wrap"><div class="months" id="months"></div></div><div class="status" id="status" role="status"></div><div class="selected-date" id="selectedDate" aria-live="polite">0 of 3 dates selected.</div><p class="hint">Choose exactly 3 dates in October or November 2026. Click a selected date again to remove it.</p><p class="hint" id="shareHint">After choosing 3 dates, you must copy them on the next slide, then paste them into a message to James and press Send. The dates are not sent automatically.</p><div class="result-tools hidden" id="resultTools"><button class="btn secondary" id="copyBtn">Copy selected dates</button><button class="btn secondary" id="continueBtn">Continue</button></div></section>
+<section class="slide last hidden" id="slide3"><h1>I'm kinda surprised ngl.</h1><p id="finalDate" class="selected-date"></p><p class="hint"><strong>Tap “Send dates to James” to email your three selected dates.</strong> If it fails, copy the dates and send them in a message instead.</p><p>If automatic sending fails: 1. Tap <strong>Copy selected dates instead</strong>. 2. Open Messages or email and start a message to James. 3. Paste the dates and tap <strong>Send</strong>.</p><div class="result-tools"><button class="btn yes" id="sendDatesBtn">Send dates to James</button><button class="btn secondary" id="copyFinalBtn">Copy selected dates instead</button><button class="btn secondary delayed" id="lastNextBtn" aria-hidden="true" tabindex="-1">Next</button></div><p class="status" id="copyStatus" role="status" aria-live="polite"></p><div class="foot">The website sends the three dates to James through Resend. If sending fails, use “Copy selected dates instead” and paste them into a message to James.</div></section>
+<section class="slide last hidden" id="slide4"><h1>Thanks.</h1><p class="hint">Looking forward to it.</p><p><strong>Did you copy and send the dates?</strong></p><div class="result-tools"><button class="btn secondary" id="backToDatesBtn">Back to the dates</button></div></section>
+</main>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let selected=[];
+let revealTimer=null;
+function showSlide(n){slides.forEach((s,i)=>s.classList.toggle('hidden',i!==n));if(n===2){const next=document.getElementById('lastNextBtn');next.classList.remove('revealed');next.setAttribute('aria-hidden','true');next.tabIndex=-1;setTimeout(()=>{if(!document.getElementById('slide3').classList.contains('hidden')){next.classList.add('revealed');next.setAttribute('aria-hidden','false');next.tabIndex=0;}},10000);}}
+document.getElementById('yesBtn').addEventListener('click',()=>showSlide(1));
+const noBtn=document.getElementById('noBtn');
+// Keep the no button visible in its original place, but make it impossible to activate.
+// pointer-events blocks mouse/touch interaction; disabled blocks keyboard activation.
+noBtn.disabled=true;
+noBtn.setAttribute('aria-label','No (unavailable)');
+noBtn.title='Nice try 😭';
+noBtn.style.pointerEvents='none';
+noBtn.style.cursor='default';
+const monthsRoot=document.getElementById('months');
+function isoDate(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+function readableDate(iso){return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+function updateSelection(){
+  document.getElementById('selectedDate').textContent=selected.length===0?'0 of 3 dates selected.':`${selected.length} of 3 dates selected: `+selected.map(readableDate).join(' · ');
+  document.getElementById('resultTools').classList.toggle('hidden',selected.length!==3);
+  document.getElementById('continueBtn').disabled=selected.length!==3;
+  document.querySelectorAll('.day').forEach(b=>{const isSelected=selected.includes(b.dataset.date);b.classList.toggle('selected',isSelected);b.setAttribute('aria-pressed',String(isSelected));b.disabled=!isSelected&&selected.length>=3;});
+}
+function buildMonth(year,month){
+ const box=document.createElement('section');box.className='month';const title=document.createElement('h2');title.textContent=new Date(year,month,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});box.append(title);
+ const week=document.createElement('div');week.className='week';['M','T','W','T','F','S','S'].forEach(x=>{const el=document.createElement('span');el.textContent=x;week.append(el)});box.append(week);
+ const days=document.createElement('div');days.className='days';let offset=(new Date(year,month,1).getDay()+6)%7;for(let i=0;i<offset;i++){const blank=document.createElement('span');days.append(blank)}
+ const total=new Date(year,month+1,0).getDate();for(let d=1;d<=total;d++){const b=document.createElement('button');b.className='day';b.type='button';b.textContent=d;b.dataset.date=isoDate(year,month,d);b.setAttribute('aria-label',readableDate(b.dataset.date));b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>chooseDate(b.dataset.date,b));days.append(b)}box.append(days);return box;
+}
+monthsRoot.append(buildMonth(2026,9),buildMonth(2026,10));
+function chooseDate(iso,button){
+ const index=selected.indexOf(iso);
+ if(index>=0){selected.splice(index,1);document.getElementById('status').textContent='';updateSelection();return;}
+ if(selected.length>=3)return;
+ selected.push(iso);selected.sort();updateSelection();
+ document.getElementById('status').textContent='thx';
+ if(revealTimer)clearTimeout(revealTimer);
+ if(selected.length===3){revealTimer=setTimeout(()=>{document.getElementById('status').textContent='';showSlide(2);document.getElementById('finalDate').textContent='Your picks: '+selected.map(readableDate).join(' · ');},3000);}
+ else {revealTimer=setTimeout(()=>{document.getElementById('status').textContent='';},3000);}
+}
+async function sendDates(){
+ if(selected.length!==3)return;
+ const button=document.getElementById('sendDatesBtn');
+ const status=document.getElementById('copyStatus');
+ button.disabled=true;button.textContent='Sending…';status.textContent='Sending your three dates to James…';
+ try{
+   const response=await fetch('/api/send-dates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dates:selected})});
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(data.error||'The email could not be sent.');
+   status.textContent='Resend accepted the email request. The dates were sent to James’s email service; delivery may take a moment.';
+   button.textContent='Dates sent';
+ }catch(error){
+   status.textContent='Could not send automatically. Use “Copy selected dates instead,” then paste the dates into a message to James and press Send. '+(error.message||'');
+   button.disabled=false;button.textContent='Try sending again';
+ }
+}
+document.getElementById('sendDatesBtn').addEventListener('click',sendDates);
+async function copyDate(){
+ if(selected.length!==3)return;
+ const text='Gym dates selected: '+selected.map((d,i)=>`${i+1}. ${readableDate(d)}`).join(' | ');
+ const status=document.getElementById('slide3').classList.contains('hidden') ? document.getElementById('status') : document.getElementById('copyStatus');
+ try{
+   if(navigator.clipboard && window.isSecureContext){await navigator.clipboard.writeText(text);}
+   else {throw new Error('Clipboard API unavailable');}
+   status.textContent='Copied! Now paste the dates into a message to James and press Send.';
+ }catch(e){
+   const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('aria-label','Selected dates to copy');ta.style.width='100%';ta.style.minHeight='90px';ta.style.marginTop='12px';ta.style.padding='10px';ta.style.font='inherit';
+   status.textContent='Automatic copying was blocked. Copy the dates from the text box below, then paste them into a message to James and press Send.';
+   status.after(ta);ta.select();
+ }
+}
+document.getElementById('copyBtn').addEventListener('click',copyDate);
+document.getElementById('copyFinalBtn').addEventListener('click',copyDate);
+document.getElementById('continueBtn').addEventListener('click',()=>{if(selected.length!==3)return;if(revealTimer)clearTimeout(revealTimer);document.getElementById('status').textContent='';showSlide(2);document.getElementById('finalDate').textContent='Your picks: '+selected.map(readableDate).join(' · ');});
+document.getElementById('lastNextBtn').addEventListener('click',()=>showSlide(3));
+document.getElementById('backToDatesBtn').addEventListener('click',()=>showSlide(2));
+updateSelection();
+</script></body></html>
